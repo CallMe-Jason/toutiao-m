@@ -27,6 +27,9 @@ export const getUserInfo = () => {
     //   //       token的数据格式：Bearer token数据，注意 Bearer 后面有个空格
     //   Authorization: `Bearer ${store.state.user.token}`
     // }
+    // headers: {
+    //   Authorization: `Bearer ${store.state.user.token}`
+    // }
   })
 }
 

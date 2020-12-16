@@ -3,6 +3,8 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 
+import './utils/dayjs'
+
 //动态设置rem基准值
 import 'amfe-flexible'
 
@@ -21,6 +23,8 @@ if(module.hot) {
 import './styles/index.less'
 
 Vue.config.productionTip = false
+
+// while(true) {}
 
 new Vue({
   router,

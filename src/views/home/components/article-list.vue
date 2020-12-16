@@ -9,7 +9,11 @@
       :error.sync='error'
       error-text="请求失败稍后再试"
     >
-      <van-cell v-for="(item,i) in list" :key="i" :title="item.title" />
+        <article-item
+          v-for="(article, index) in list"
+          :key="index"
+          :article="article"
+        />
     </van-list>
     </van-pull-refresh>
   </div>
@@ -17,8 +21,12 @@
 
 <script>
 import { getArticles } from '@/api/article'
+import ArticleItem from '@/components/article-item'
 export default {
   name: 'ArticleList',
+  components: {
+    ArticleItem
+  },
   props: {
     channel: {
       type: Object,
