@@ -1,5 +1,17 @@
 <template>
-  <van-cell class="article-item">
+  <!-- <van-cell class="article-item" :to="'/article/' + article.art_id"> -->
+  <!-- <van-cell class="article-item" :to="`/article/${article.art_id}`"> -->
+  <van-cell
+    class="article-item"
+    :to="{
+      // 根据路由名称跳转
+      name: 'article',
+      // 传递参数，属性名要求是配置路由时路径中指定的名称，path: '/article/:articleId',
+      params: {
+        articleId: article.art_id
+      }
+    }"
+  >
     <div slot="title" class="title van-multi-ellipsis--l2">
       {{ article.title }}
     </div>
@@ -18,7 +30,7 @@
       <div class="label-info-wrap">
         <span>{{ article.aut_name }}</span>
         <span>{{ article.comm_count }}评论</span>
-        <span>{{ article.pubdate | relativeTime}}</span>
+        <span>{{ article.pubdate | relativeTime }}</span>
       </div>
     </div>
     <!-- 右侧一张图片的情况 -->
@@ -40,6 +52,9 @@ export default {
       required: true
     }
   },
+  created() {
+    // console.log(this.article);
+  }
 }
 </script>
 
@@ -56,11 +71,7 @@ export default {
   }
   // 右侧的一张图片
   .van-cell__value {
-    // https://developer.mozilla.org/zh-CN/docs/Web/CSS/flex
     flex: unset;
-    // unset
-    // 属性是默认继承属性，该值等同于 inherit
-    // 该属性是非继承属性，该值等同于 initial
     width: 232px;
     height: 146px;
     padding-left: 25px;

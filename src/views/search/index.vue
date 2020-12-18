@@ -17,7 +17,7 @@
     <!-- 联想建议 -->
     <search-suggestion v-else-if="value" :search-text="value" @search="onSearch"/>
      <!-- 搜索历史 -->
-    <search-history v-else/>
+    <search-history v-else :search-histories="searchHistories" @clear-search-histories="searchHistories = []"  @search="onSearch" />
   </div>
 </template>
 
@@ -25,6 +25,7 @@
 import SearchHistory from './components/search-history'
 import SearchSuggestion from './components/search-suggestion'
 import SearchResult from './components/search-result'
+import { setItem, getItem } from '@/utils/storage'
 
 export default {
   name: 'SearchIndex',
@@ -36,14 +37,30 @@ export default {
   data () {
     return {
       value: '',
-      isResultShow: false // 控制搜索结果的展示
+      isResultShow: false, // 控制搜索结果的展示
+      // searchHistories: [],
+      searchHistories: getItem('TOUTIAO_SEARCH_HISTORIES') || []
     }
+  },
+  watch: {
+    searchHistories(value) {
+      setItem('TOUTIAO_SEARCH_HISTORIES', value)
+    }
+    /* searchHistories: {
+      handler () {}
+    } */
   },
   methods: {
     onSearch (val) {
-      console.log(val);
-        this.value = val
-        this.isResultShow = true
+      // console.log(1);
+      this.value = val
+      const index = this.searchHistories.indexOf(val)
+      if (index !== -1) {
+        this.searchHistories.splice(index,1)
+      }
+      this.searchHistories.unshift(val)
+      
+      this.isResultShow = true
     },
     onCancel () {
       this.$router.back()
