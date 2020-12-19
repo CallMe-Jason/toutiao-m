@@ -14,7 +14,7 @@
       <!-- 加载完成-文章详情 -->
       <div class="article-detail" v-else-if="article.title">
         <!-- 文章标题 -->
-        <h1 class="article-title">{{article.title}}</h1>
+        <h1 class="article-title">{{ article.title }}</h1>
         <!-- /文章标题 -->
 
         <!-- 用户信息 -->
@@ -26,28 +26,72 @@
             fit="cover"
             :src="article.aut_photo"
           />
-          <div slot="title" class="user-name">{{article.aut_name}}</div>
-          <div slot="label" class="publish-date">{{article.pubdate | relativeTime}}</div>
-          <van-button
+          <div slot="title" class="user-name">{{ article.aut_name }}</div>
+          <div slot="label" class="publish-date">
+            {{ article.pubdate | relativeTime }}
+          </div>
+          <!-- <van-button
+            v-if="article.is_followed"
             class="follow-btn"
             type="info"
             color="#3296fa"
             round
             size="small"
             icon="plus"
+            :loading='followLoading'
+            @click="onFollow"
             >关注</van-button
           >
-          <!-- <van-button
+          <van-button
+            :loading='followLoading'
+            v-else
             class="follow-btn"
             round
             size="small"
+            @click="onFollow"
           >已关注</van-button> -->
+          <follow-user
+            class="follow-btn"
+            v-model="article.is_followed"
+            :user-id="article.aut_id"
+          ></follow-user>
         </van-cell>
         <!-- /用户信息 -->
 
         <!-- 文章内容 -->
-        <div class="article-content markdown-body" v-html="article.content" ref="article-content"></div>
+        <div
+          class="article-content markdown-body"
+          v-html="article.content"
+          ref="article-content"
+        ></div>
         <van-divider>正文结束</van-divider>
+        <!-- 文章评论 -->
+        <comment-list :source='article.art_id' :list='commentList' @onload-success='totalCommentCount = $event.total_count'></comment-list>
+        <!-- 底部区域 -->
+        <div class="article-bottom">
+          <van-button class="comment-btn" type="default" round size="small" @click="isPostShow=true"
+            >写评论</van-button
+          >
+          <!-- 这里在 info 替换成 badge -->
+          <van-icon name="comment-o" :badge="totalCommentCount" color="#777" />
+          <collect-article
+            class="btn-item"
+            v-model="article.is_collected"
+            :article-id="article.art_id"
+          ></collect-article>
+         <like-article
+            class="btn-item"
+            v-model="article.attitude"
+            :article-id="article.art_id"
+          />
+          <van-icon name="share" color="#777777"></van-icon>
+        </div>
+        <!-- /底部区域 -->
+
+        <!-- 发布评论弹出层 -->
+        <van-popup v-model="isPostShow" position="bottom">
+          <comment-post :target='article.art_id' @post-success='onPostSuccess'></comment-post>
+        </van-popup>
       </div>
       <!-- /加载完成-文章详情 -->
 
@@ -66,88 +110,102 @@
       </div>
       <!-- /加载失败：其它未知错误（例如网络原因或服务端异常） -->
     </div>
-
-    <!-- 底部区域 -->
-    <div class="article-bottom">
-      <van-button class="comment-btn" type="default" round size="small"
-        >写评论</van-button
-      >
-      <!-- 这里在 info 替换成 badge -->
-      <van-icon name="comment-o" badge="123" color="#777" />
-      <van-icon color="#777" name="star-o" />
-      <van-icon color="#777" name="good-job-o" />
-      <van-icon name="share" color="#777777"></van-icon>
-    </div>
-    <!-- /底部区域 -->
   </div>
 </template>
 
 <script>
-import { getArticleById } from '@/api/article'
-import { ImagePreview } from 'vant'
+import { getArticleById } from "@/api/article";
+import { ImagePreview } from "vant";
+// import { deleteFollow, addFollow } from '@/api/user'
+import FollowUser from "@/components/follow-user";
+import CollectArticle from "@/components/collect-article";
+import LikeArticle from "@/components/like-article";
+import CommentList from "./component/comment-list"
+// import CommentList from './component/comment-list.vue';
+import CommentPost from './component/comment-post'
+// import CommentPost from './component/comment-post.vue';
 
 export default {
-  name: 'ArticleIndex',
-  components: {},
+  name: "ArticleIndex",
+  components: {
+    FollowUser,
+    CollectArticle,
+    LikeArticle,
+    // CommentList
+    CommentList,
+    CommentPost
+    // CommentPost
+  },
+  // components: {},
   props: {
     articleId: {
-      type: [Number, String,Object],
-      required: true
-    }
+      type: [Number, String, Object],
+      required: true,
+    },
   },
   data() {
     return {
+      isPostShow: false,
       article: {},
       loading: true,
-      errStatus: 0
-    }
+      errStatus: 0,
+      followLoading: false,
+      totalCommentCount: 0,
+      commentList: []
+    };
   },
   computed: {},
   watch: {},
   created() {
-    this.loadArticle()
+    this.loadArticle();
   },
   mounted() {},
   methods: {
-     previewImage() {
-      const articleContent = this.$refs['article-content']
-      const imgs = articleContent.querySelectorAll('img')
-      const images = []
+    onPostSuccess(data) {
+      this.isPostShow = false
+      this.commentList.unshift(data.new_obj)
+    },
+    //关注
+
+    previewImage() {
+      const articleContent = this.$refs["article-content"];
+      const imgs = articleContent.querySelectorAll("img");
+      const images = [];
       imgs.forEach((img, index) => {
-        images.push(img.src)
-        img.onclick = function() {
+        images.push(img.src);
+        img.onclick = function () {
           ImagePreview({
             images,
-            startPosition: index
-          })
-        }
-      })
+            startPosition: index,
+          });
+        };
+      });
     },
     async loadArticle() {
-      this.loading = true
+      this.loading = true;
       try {
-        const { data } = await getArticleById(this.articleId)
+        const { data } = await getArticleById(this.articleId);
         // console.log(data)
-        this.article = data.data
+        this.article = data.data;
         // this.loading = false
         setTimeout(() => {
-          this.previewImage()
-        }, 0)
+          this.previewImage();
+        }, 0);
       } catch (err) {
         if (err.response && err.response.status === 404) {
-          this.errStatus = 404
+          this.errStatus = 404;
         }
-        console.log('获取数据失败', err)
+        console.log("获取数据失败", err);
         // this.loading = false
       }
-      this.loading = false
-    }
-  }
-}
+      this.loading = false;
+    },
+  },
+};
 </script>
 
 <style scoped lang="less">
-@import './github-markdown.css';
+@import "./github-markdown.css";
 
 .article-container {
   .main-wrap {
@@ -248,7 +306,7 @@ export default {
       line-height: 46px;
       color: #a7a7a7;
     }
-    .van-icon {
+    /deep/ .van-icon {
       font-size: 40px;
       .van-info {
         font-size: 16px;
